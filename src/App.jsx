@@ -16,19 +16,20 @@ import {
   setDoc
 } from 'firebase/firestore';
 import { app, auth, db } from '../firebase';
-import { 
-  ClipboardCheck, 
-  History, 
-  LogOut, 
-  User, 
-  Plus, 
-  CheckCircle2, 
+import {
+  ClipboardCheck,
+  History,
+  LogOut,
+  User,
+  Plus,
+  CheckCircle2,
   AlertCircle,
   ChevronDown,
   ChevronUp,
   FileText,
   Trash2
 } from 'lucide-react';
+import ExportHistoryModal from './components/modals/ExportHistoryModal';
 
 // Firebase is initialized in `firebase.js` and exported as `app`, `auth`, `db`.
 const appId = 'ambulance-checklist-app';
@@ -583,48 +584,14 @@ export default function App() {
 
       {/* export modal */}
       {showExportModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-20">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
-            <h3 className="text-lg font-bold mb-4">Exportar Histórico</h3>
-            <div className="space-y-4">
-              <div className="flex flex-col">
-                <label className="text-sm font-medium">Data inicial</label>
-                <input
-                  type="date"
-                  value={exportStart}
-                  onChange={(e) => setExportStart(e.target.value)}
-                  className="mt-1 p-2 border rounded"
-                />
-              </div>
-              <div className="flex flex-col">
-                <label className="text-sm font-medium">Data final</label>
-                <input
-                  type="date"
-                  value={exportEnd}
-                  onChange={(e) => setExportEnd(e.target.value)}
-                  className="mt-1 p-2 border rounded"
-                />
-              </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setShowExportModal(false)}
-                className="px-4 py-2 rounded bg-gray-200"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleExport}
-                className="px-4 py-2 rounded bg-red-600 text-white disabled:opacity-50"
-                disabled={
-                  !exportStart || !exportEnd || exportStart > exportEnd
-                }
-              >
-                Exportar CSV
-              </button>
-            </div>
-          </div>
-        </div>
+        <ExportHistoryModal
+          exportStart={exportStart}
+          exportEnd={exportEnd}
+          setExportStart={setExportStart}
+          setExportEnd={setExportEnd}
+          onClose={() => setShowExportModal(false)}
+          onExport={handleExport}
+        />
       )}
 
       {/* Bottom Nav */}
