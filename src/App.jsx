@@ -142,10 +142,17 @@ export default function App() {
     },
     liberada: true,
     assinatura: '',
-    driverName: ''
+    driverName: '',
+    veiculoNome: '',
+    kilometragem: '',
+    local: ''
   };
 
   const [formData, setFormData] = useState(initialFormState);
+  // states for export modal
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportStart, setExportStart] = useState('');
+  const [exportEnd, setExportEnd] = useState('');
 
   // Inicializar Auth
   useEffect(() => {
@@ -187,11 +194,139 @@ export default function App() {
     }));
   };
 
+  // flatten object recursively for CSV export
+  const flatten = (obj, prefix = '') => {
+    let res = {};
+    for (const key in obj) {
+      if (
+        obj[key] &&
+        typeof obj[key] === 'object' &&
+        !Array.isArray(obj[key])
+      ) {
+        Object.assign(res, flatten(obj[key], prefix + key + '.'));
+      } else {
+        res[prefix + key] = obj[key];
+      }
+    }
+    return res;
+  };
+
+  // mapping for human-readable column names
+  const fieldLabels = {
+    motorista: 'Motorista',
+    loggedInUser: 'Usuário logado',
+    createdAt: 'Timestamp',
+    dataString: 'Data',
+    liberada: 'Liberada',
+    motoristaUid: 'UID do motorista',
+    'veiculo.combustivel': 'Combustível acima de ½ tanque',
+    'veiculo.oleo': 'Óleo do motor',
+    'veiculo.agua': 'Água do radiador',
+    'veiculo.pneus': 'Pneus calibrados',
+    'veiculo.estepe': 'Estepe em condições',
+    'veiculo.macaco': 'Macaco e chave de roda',
+    'veiculo.luzes': 'Luz alta e baixa',
+    'veiculo.setas': 'Setas e luz de freio',
+    'veiculo.giroflex': 'Giroflex funcionando',
+    'veiculo.sirene': 'Sirene funcionando',
+    'veiculo.limpador': 'Limpador de para-brisa',
+    'veiculo.arCondicionado': 'Ar-condicionado',
+    'veiculo.maca': 'Maca principal funcionando',
+    'veiculo.travasMaca': 'Travas da maca',
+    'imobilizacao.prancha': 'Prancha longa',
+    'imobilizacao.cintoAranha': 'Cinto aranha',
+    'imobilizacao.headBlock': 'Tirante de cabeça (head block)',
+    'imobilizacao.colares': 'Colares cervicais',
+    'imobilizacao.talas': 'Talas de imobilização',
+    'imobilizacao.bandagens': 'Bandagens triangulares',
+    'imobilizacao.cobertor': 'Cobertor/manta térmica',
+    'imobilizacao.cadeiraRemocao': 'Cadeira de rodas/remoção',
+    'oxigenacao.cilindroCheio': 'Cilindro de oxigênio cheio',
+    'oxigenacao.cilindroReserva': 'Cilindro reserva',
+    'oxigenacao.fluxometro': 'Fluxômetro e umidificador',
+    'oxigenacao.umidificador': 'Umidificador',
+    'oxigenacao.mascaraAdulto': 'Máscara O2 adulto',
+    'oxigenacao.mascaraPed': 'Máscara O2 ped',
+    'oxigenacao.mascaraReservatorio': 'Máscara de reservatório',
+    'oxigenacao.ambuAdulto': 'Ambu adulto',
+    'oxigenacao.ambuPed': 'Ambu ped',
+    'oxigenacao.aspirador': 'Aspirador portátil',
+    'biosseguranca.lixoInfectante': 'Lixo infectante',
+    'biosseguranca.lixoComum': 'Lixo comum',
+    'biosseguranca.desinfetante': 'Desinfetante e papel-toalha',
+    'biosseguranca.papelToalha': 'Papel toalha',
+    'biosseguranca.caixaPerfuro': 'Caixa coletora perfurocortante',
+    driverName: 'Nome do motorista',
+    veiculoNome: 'Nome do veículo',
+    kilometragem: 'Kilometragem',
+    local: 'Local',
+  };
+
+  const handleExport = () => {
+    if (!exportStart || !exportEnd) return;
+    // parse local dates instead of relying on Date(string) which converts
+    // the value to UTC and then .setHours() applies local tz, resulting in
+    // offsets that can exclude same-day records (e.g. Brazil UTC-3).
+    const parseLocalDate = (s) => {
+      const [y, m, d] = s.split('-').map(Number);
+      return new Date(y, m - 1, d);
+    };
+    const startDate = parseLocalDate(exportStart);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = parseLocalDate(exportEnd);
+    endDate.setHours(23, 59, 59, 999);
+    const startTs = startDate.getTime();
+    const endTs = endDate.getTime();
+    const filtered = history.filter(
+      (item) => item.createdAt >= startTs && item.createdAt <= endTs
+    );
+    if (filtered.length === 0) {
+      alert('Nenhum registro no período selecionado.');
+      return;
+    }
+    const rows = filtered.map((r) => {
+      const clone = { ...r };
+      delete clone.assinatura;
+      delete clone.id;          // remove firestore document id
+      return flatten(clone);
+    });
+    let headers = [...new Set(rows.flatMap((r) => Object.keys(r)))];
+    // ensure ordering: motorista then loggedInUser first
+    headers = headers.filter(h => h !== 'motorista' && h !== 'loggedInUser');
+    headers.unshift('loggedInUser');
+    headers.unshift('motorista');
+    const humanHeaders = headers.map(h => fieldLabels[h] || h);
+    const formatVal = (v) => v === true ? 'Sim' : v === false ? 'Não' : v;
+    const csv = [humanHeaders.join(',')]
+      .concat(
+        rows.map((r) =>
+          headers
+            .map((h) => JSON.stringify(formatVal(r[h] ?? '')))
+            .join(',')
+        )
+      )
+      .join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `history_${exportStart}_${exportEnd}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowExportModal(false);
+    setExportStart('');
+    setExportEnd('');
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
     if (!formData.driverName) {
       alert("Por favor, preencha o nome do motorista.");
+      return;
+    }
+    if (!formData.veiculoNome) {
+      alert("Por favor, informe o nome do veículo.");
       return;
     }
     if (!formData.assinatura) {
@@ -364,6 +499,43 @@ export default function App() {
                     placeholder="Digite seu nome completo"
                   />
                 </div>
+                {/* Nome do Veículo */}
+                <div className="space-y-3">
+                  <p className="text-sm font-bold text-gray-700">Nome do Veículo</p>
+                  <input
+                    type="text"
+                    value={formData.veiculoNome}
+                    onChange={(e) => setFormData({ ...formData, veiculoNome: e.target.value })}
+                    className="w-full p-3 rounded-xl border border-gray-300"
+                    placeholder="Ex: Ambulância 01"
+                  />
+                </div>
+                {/* Kilometragem */}
+                <div className="space-y-3">
+                  <p className="text-sm font-bold text-gray-700">Kilometragem</p>
+                  <input
+                    type="number"
+                    value={formData.kilometragem}
+                    onChange={(e) => setFormData({ ...formData, kilometragem: e.target.value })}
+                    className="w-full p-3 rounded-xl border border-gray-300"
+                    placeholder="Último odômetro"
+                  />
+                </div>
+                {/* Local */}
+                <div className="space-y-3">
+                  <p className="text-sm font-bold text-gray-700">Local</p>
+                  <select
+                    value={formData.local}
+                    onChange={(e) => setFormData({ ...formData, local: e.target.value })}
+                    className="w-full p-3 rounded-xl border border-gray-300"
+                  >
+                    <option value="">Selecione</option>
+                    <option>UBS Datas</option>
+                    <option>UBS Palmital</option>
+                    <option>UBS Tombadouro</option>
+                    <option>Unidade Mista</option>
+                  </select>
+                </div>
 
                 {/* Assinatura */}
                 <div className="space-y-3">
@@ -385,7 +557,15 @@ export default function App() {
           </form>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-xl font-bold text-gray-900 px-2">Histórico Online</h2>
+            <h2 className="text-xl font-bold text-gray-900 px-2 flex justify-between items-center">
+              Histórico Online
+              <button
+                onClick={() => setShowExportModal(true)}
+                className="text-sm font-bold text-red-600"
+              >
+                Exportar
+              </button>
+            </h2>
             {history.length === 0 ? (
               <div className="bg-white p-12 rounded-2xl text-center border border-dashed border-gray-200">
                 <FileText className="mx-auto text-gray-300 mb-4" size={48} />
@@ -399,6 +579,53 @@ export default function App() {
           </div>
         )}
       </main>
+
+
+      {/* export modal */}
+      {showExportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-20">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md">
+            <h3 className="text-lg font-bold mb-4">Exportar Histórico</h3>
+            <div className="space-y-4">
+              <div className="flex flex-col">
+                <label className="text-sm font-medium">Data inicial</label>
+                <input
+                  type="date"
+                  value={exportStart}
+                  onChange={(e) => setExportStart(e.target.value)}
+                  className="mt-1 p-2 border rounded"
+                />
+              </div>
+              <div className="flex flex-col">
+                <label className="text-sm font-medium">Data final</label>
+                <input
+                  type="date"
+                  value={exportEnd}
+                  onChange={(e) => setExportEnd(e.target.value)}
+                  className="mt-1 p-2 border rounded"
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="px-4 py-2 rounded bg-gray-200"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleExport}
+                className="px-4 py-2 rounded bg-red-600 text-white disabled:opacity-50"
+                disabled={
+                  !exportStart || !exportEnd || exportStart > exportEnd
+                }
+              >
+                Exportar CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-around shadow-lg">
@@ -470,6 +697,7 @@ function HistoryCard({ data }) {
         <div>
           <h3 className="font-bold text-gray-900 text-sm">{data.motorista}</h3>
           <p className="text-xs text-gray-500">Logado como: {data.loggedInUser}</p>
+          <p className="text-xs text-gray-500">Veículo: {data.veiculoNome} | Km: {data.kilometragem || '-'} | Local: {data.local || '-'}</p>
           <p className="text-[10px] text-gray-500 uppercase font-bold">{data.dataString}</p>
         </div>
         <div className={`px-2 py-1 rounded text-[10px] font-black uppercase ${data.liberada ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
