@@ -27,14 +27,24 @@ export function useOnlineStatus() {
 
     // Listen for service worker messages
     const handleServiceWorkerMessage = (event) => {
-      if (event.data && event.data.type === 'SYNC_COMPLETE') {
+      if (!event.data) return;
+
+      if (event.data.type === 'SYNC_COMPLETE') {
         setSyncStatus('success');
         setTimeout(() => setSyncStatus('idle'), 3000); // Reset after 3 seconds
+      }
+
+      if (event.data.type === 'TRIGGER_LOCAL_SYNC') {
+        syncPendingData();
       }
     };
 
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    }
+
+    if (navigator.onLine) {
+      syncPendingData();
     }
 
     return () => {
@@ -58,17 +68,20 @@ export function useOnlineStatus() {
       const { collection, addDoc } = await import('firebase/firestore');
       const { db } = await import('../../firebase');
 
+      let failedSyncs = 0;
+
       for (const item of pending) {
         try {
           await addDoc(collection(db, 'checklists'), item.data);
           removePendingChecklist(item.id);
           console.log('Synced pending checklist:', item.id);
         } catch (error) {
+          failedSyncs += 1;
           console.error('Failed to sync checklist:', item.id, error);
         }
       }
 
-      setSyncStatus('success');
+      setSyncStatus(failedSyncs > 0 ? 'error' : 'success');
       setTimeout(() => setSyncStatus('idle'), 3000);
     } catch (error) {
       console.error('Sync failed:', error);
