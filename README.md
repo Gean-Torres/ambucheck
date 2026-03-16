@@ -62,3 +62,9 @@ firebase deploy --only hosting
 - Componentes de interface reutilizáveis devem ficar em `src/components`.
 - Novos modais devem reutilizar `BaseModal` para manter consistência visual.
 - Regras de exportação e transformação de dados devem permanecer no `App.jsx` ou ser extraídas para utilitários caso cresçam.
+
+
+## Capacidade offline
+- O app registra um **Service Worker** (`public/sw.js`) para cachear shell estática e assets acessados.
+- A interface exibe um aviso quando o dispositivo está sem internet.
+- O Firestore foi configurado com cache local persistente, permitindo leitura de dados recentes e sincronização quando a conexão retornar.

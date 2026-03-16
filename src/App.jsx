@@ -121,6 +121,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
 
 // Estado do Formulário
   const initialFormStates = {
@@ -196,6 +197,19 @@ export default function App() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportStart, setExportStart] = useState('');
   const [exportEnd, setExportEnd] = useState('');
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const selectVehicleType = (type) => {
     setVehicleType(type);
@@ -602,6 +616,11 @@ export default function App() {
 
   if (!user) return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center">
+      {!isOnline && (
+        <div className="mb-6 w-full max-w-sm rounded-lg border border-amber-300 bg-amber-100 px-3 py-2 text-xs font-semibold text-amber-900">
+          Você está offline. Conecte-se para fazer login e sincronizar os dados.
+        </div>
+      )}
       <div className="w-20 h-20 bg-red-100 text-red-600 rounded-3xl flex items-center justify-center mb-6 shadow-xl">
         <ClipboardCheck size={40} />
       </div>
@@ -651,6 +670,12 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {!isOnline && (
+        <div className="bg-amber-100 border-b border-amber-300 px-4 py-2 text-center text-xs font-semibold text-amber-900">
+          Você está offline. Os dados recentes ficam visíveis no dispositivo e serão sincronizados quando a conexão voltar.
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto p-4 sm:p-6">
