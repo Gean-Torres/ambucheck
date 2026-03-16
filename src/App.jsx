@@ -240,6 +240,7 @@ export default function App() {
   const [exportStart, setExportStart] = useState('');
   const [exportEnd, setExportEnd] = useState('');
   const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all'); // 'all', 'ambulancia', 'carro_pequeno'
+  const [exportLayout, setExportLayout] = useState('horizontal'); // 'horizontal' | 'vertical'
 
   const selectVehicleType = (type) => {
     setVehicleType(type);
@@ -352,16 +353,23 @@ export default function App() {
           <Section title="Oxigenação e Ventilação">
             <CheckItem label="Cilindro de oxigênio cheio" active={formData.oxigenacao.cilindroCheio} onToggle={() => handleToggle('oxigenacao', 'cilindroCheio')} />
             <CheckItem label="Cilindro reserva" active={formData.oxigenacao.cilindroReserva} onToggle={() => handleToggle('oxigenacao', 'cilindroReserva')} />
-            <CheckItem label="Fluxômetro e Umidificador" active={formData.oxigenacao.fluxometro} onToggle={() => handleToggle('oxigenacao', 'fluxometro')} />
-            <CheckItem label="Máscaras O2 (Adulto/Ped)" active={formData.oxigenacao.mascaraAdulto} onToggle={() => handleToggle('oxigenacao', 'mascaraAdulto')} />
-            <CheckItem label="Ambu (Adulto/Ped)" active={formData.oxigenacao.ambuAdulto} onToggle={() => handleToggle('oxigenacao', 'ambuAdulto')} />
+            <CheckItem label="Fluxômetro" active={formData.oxigenacao.fluxometro} onToggle={() => handleToggle('oxigenacao', 'fluxometro')} />
+            <CheckItem label="Umidificador" active={formData.oxigenacao.umidificador} onToggle={() => handleToggle('oxigenacao', 'umidificador')} />
+            <CheckItem label="Máscara O2 adulto" active={formData.oxigenacao.mascaraAdulto} onToggle={() => handleToggle('oxigenacao', 'mascaraAdulto')} />
+            <CheckItem label="Máscara O2 pediátrica" active={formData.oxigenacao.mascaraPed} onToggle={() => handleToggle('oxigenacao', 'mascaraPed')} />
+            <CheckItem label="Máscara de reservatório" active={formData.oxigenacao.mascaraReservatorio} onToggle={() => handleToggle('oxigenacao', 'mascaraReservatorio')} />
+            <CheckItem label="Ambu adulto" active={formData.oxigenacao.ambuAdulto} onToggle={() => handleToggle('oxigenacao', 'ambuAdulto')} />
+            <CheckItem label="Ambu pediátrico" active={formData.oxigenacao.ambuPed} onToggle={() => handleToggle('oxigenacao', 'ambuPed')} />
             <CheckItem label="Aspirador portátil" active={formData.oxigenacao.aspirador} onToggle={() => handleToggle('oxigenacao', 'aspirador')} />
+            <CheckItem label="Sondas de aspiração" active={formData.oxigenacao.sondas} onToggle={() => handleToggle('oxigenacao', 'sondas')} />
           </Section>
 
           {/* 4. Biossegurança */}
           <Section title="Biossegurança">
-            <CheckItem label="Sacou para lixo infectante/comum" active={formData.biosseguranca.lixoInfectante} onToggle={() => handleToggle('biosseguranca', 'lixoInfectante')} />
-            <CheckItem label="Desinfetante e Papel Toalha" active={formData.biosseguranca.desinfetante} onToggle={() => handleToggle('biosseguranca', 'desinfetante')} />
+            <CheckItem label="Lixo infectante" active={formData.biosseguranca.lixoInfectante} onToggle={() => handleToggle('biosseguranca', 'lixoInfectante')} />
+            <CheckItem label="Lixo comum" active={formData.biosseguranca.lixoComum} onToggle={() => handleToggle('biosseguranca', 'lixoComum')} />
+            <CheckItem label="Desinfetante" active={formData.biosseguranca.desinfetante} onToggle={() => handleToggle('biosseguranca', 'desinfetante')} />
+            <CheckItem label="Papel toalha" active={formData.biosseguranca.papelToalha} onToggle={() => handleToggle('biosseguranca', 'papelToalha')} />
             <CheckItem label="Caixa coletora perfurocortante" active={formData.biosseguranca.caixaPerfuro} onToggle={() => handleToggle('biosseguranca', 'caixaPerfuro')} />
           </Section>
         </>
@@ -607,15 +615,27 @@ export default function App() {
     headers.unshift('motorista');
     const humanHeaders = headers.map(h => fieldLabels[h] || h);
     const formatVal = (v) => v === true ? '✅' : v === false ? '❌' : v;
-    const csv = [humanHeaders.join(',')]
-      .concat(
-        rows.map((r) =>
-          headers
-            .map((h) => JSON.stringify(formatVal(r[h] ?? '')))
-            .join(',')
-        )
-      )
-      .join('\n');
+    const csv = exportLayout === 'vertical'
+      ? rows
+          .map((r, index) => {
+            const recordTitle = JSON.stringify(`Registro ${index + 1}`);
+            const recordRows = headers.map((h) => {
+              const label = JSON.stringify(fieldLabels[h] || h);
+              const value = JSON.stringify(formatVal(r[h] ?? ''));
+              return `${label},${value}`;
+            });
+            return [recordTitle, ...recordRows, ''].join('\n');
+          })
+          .join('\n')
+      : [humanHeaders.join(',')]
+          .concat(
+            rows.map((r) =>
+              headers
+                .map((h) => JSON.stringify(formatVal(r[h] ?? '')))
+                .join(',')
+            )
+          )
+          .join('\n');
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -627,6 +647,7 @@ export default function App() {
     setExportStart('');
     setExportEnd('');
     setVehicleTypeFilter('all'); // Reset filter after export
+    setExportLayout('horizontal');
   };
 
   const handleSubmit = async (e) => {
@@ -990,9 +1011,12 @@ export default function App() {
           setExportEnd={setExportEnd}
           vehicleTypeFilter={vehicleTypeFilter}
           setVehicleTypeFilter={setVehicleTypeFilter}
+          exportLayout={exportLayout}
+          setExportLayout={setExportLayout}
           onClose={() => {
             setShowExportModal(false);
             setVehicleTypeFilter('all'); // Reset filter when modal closes
+            setExportLayout('horizontal');
           }}
           onExport={handleExport}
         />
