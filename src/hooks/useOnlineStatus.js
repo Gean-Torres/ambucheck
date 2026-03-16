@@ -1,0 +1,126 @@
+import { useState, useEffect } from 'react';
+
+export function useOnlineStatus() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [syncStatus, setSyncStatus] = useState('idle'); // 'idle', 'syncing', 'success', 'error'
+
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOnline(true);
+      // Trigger background sync when coming back online
+      if ('serviceWorker' in navigator && 'sync' in window.ServiceWorkerRegistration.prototype) {
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.sync.register('background-sync-checklists');
+        });
+      }
+      // Also try to sync immediately
+      syncPendingData();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+    };
+
+    // Listen for online/offline events
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    // Listen for service worker messages
+    const handleServiceWorkerMessage = (event) => {
+      if (event.data && event.data.type === 'SYNC_COMPLETE') {
+        setSyncStatus('success');
+        setTimeout(() => setSyncStatus('idle'), 3000); // Reset after 3 seconds
+      }
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleServiceWorkerMessage);
+    }
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.removeEventListener('message', handleServiceWorkerMessage);
+      }
+    };
+  }, []);
+
+  // Function to sync pending data
+  const syncPendingData = async () => {
+    const pending = getPendingChecklists();
+    if (pending.length === 0) return;
+
+    setSyncStatus('syncing');
+
+    try {
+      // Import Firebase functions dynamically
+      const { collection, addDoc } = await import('firebase/firestore');
+      const { db } = await import('../../firebase');
+
+      for (const item of pending) {
+        try {
+          await addDoc(collection(db, 'checklists'), item.data);
+          removePendingChecklist(item.id);
+          console.log('Synced pending checklist:', item.id);
+        } catch (error) {
+          console.error('Failed to sync checklist:', item.id, error);
+        }
+      }
+
+      setSyncStatus('success');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    } catch (error) {
+      console.error('Sync failed:', error);
+      setSyncStatus('error');
+      setTimeout(() => setSyncStatus('idle'), 3000);
+    }
+  };
+
+  return { isOnline, syncStatus, setSyncStatus };
+}
+
+// Hook for managing offline submissions
+export function useOfflineStorage() {
+  const storePendingChecklist = async (checklistData) => {
+    try {
+      const pendingData = {
+        id: Date.now().toString(),
+        data: checklistData,
+        timestamp: Date.now(),
+        synced: false
+      };
+
+      // Store in localStorage as fallback (could be IndexedDB for production)
+      const pending = JSON.parse(localStorage.getItem('pendingChecklists') || '[]');
+      pending.push(pendingData);
+      localStorage.setItem('pendingChecklists', JSON.stringify(pending));
+
+      return pendingData.id;
+    } catch (error) {
+      console.error('Failed to store pending checklist:', error);
+      throw error;
+    }
+  };
+
+  const getPendingChecklists = () => {
+    try {
+      return JSON.parse(localStorage.getItem('pendingChecklists') || '[]');
+    } catch (error) {
+      console.error('Failed to get pending checklists:', error);
+      return [];
+    }
+  };
+
+  const removePendingChecklist = (id) => {
+    try {
+      const pending = JSON.parse(localStorage.getItem('pendingChecklists') || '[]');
+      const filtered = pending.filter(item => item.id !== id);
+      localStorage.setItem('pendingChecklists', JSON.stringify(filtered));
+    } catch (error) {
+      console.error('Failed to remove pending checklist:', error);
+    }
+  };
+
+  return { storePendingChecklist, getPendingChecklists, removePendingChecklist };
+}

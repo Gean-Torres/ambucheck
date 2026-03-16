@@ -9,6 +9,8 @@ export default function ExportHistoryModal({
   exportEnd,
   setExportStart,
   setExportEnd,
+  vehicleTypeFilter,
+  setVehicleTypeFilter,
   onClose,
   onExport,
 }) {
@@ -28,6 +30,19 @@ export default function ExportHistoryModal({
       }
     >
       <div className="space-y-4">
+        <div className="flex flex-col">
+          <label className="text-sm font-medium">Tipo de Veículo</label>
+          <select
+            value={vehicleTypeFilter}
+            onChange={(e) => setVehicleTypeFilter(e.target.value)}
+            className="mt-1 p-2 border rounded"
+          >
+            <option value="all">Todos os tipos</option>
+            <option value="ambulancia">Apenas Ambulância</option>
+            <option value="carro_pequeno">Apenas Carro Pequeno</option>
+          </select>
+        </div>
+
         <div className="flex flex-col">
           <label className="text-sm font-medium">Data inicial</label>
           <input
