@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider, 
   onAuthStateChanged, 
   signOut,
@@ -126,6 +128,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState([]);
   const [submitting, setSubmitting] = useState(false);
+  const [authError, setAuthError] = useState('');
 
 // Estado do Formulário
   const initialFormStates = {
@@ -163,14 +166,14 @@ export default function App() {
         pintura: false, riscos: false, alinhamento: false, vidros: false, retrovisores: false
       },
       pneus_rodas: {
-        calibragem: false, desgaste: false, sulcos: false, estepe: false, macaco_chave: false
+        pneus: false, desgaste: false, sulcos: false, estepe: false, macaco: false
       },
       iluminacao: {
-        farois: false, lanternas: false, luz_freio: false, luz_re: false, 
-        pisca: false, luz_placa: false, farol_neblina: false
+        luzes: false, lanternas: false, luz_freio: false, luz_re: false, 
+        setas: false, luz_placa: false, farol_neblina: false
       },
       interior: {
-        cintos: false, bancos: false, painel: false, ar_condicionado: false, 
+        cintos: false, bancos: false, painel: false, arCondicionado: false, 
         vidros_eletricos: false, travamento: false, buzina: false
       },
       motor_fluidos: {
@@ -183,7 +186,7 @@ export default function App() {
         ruidos: false, direcao: false, volante: false
       },
       equipamentos: {
-        triangulo: false, macaco: false, chave_roda: false, estepe: false
+        triangulo: false
       },
       liberada: false,
       assinatura: '',
@@ -283,20 +286,20 @@ export default function App() {
 
           {/* Pneus e Rodas */}
           <Section title="Pneus e Rodas">
-            <CheckItem label="Calibragem correta" active={formData.pneus_rodas.calibragem} onToggle={() => handleToggle('pneus_rodas', 'calibragem')} />
+            <CheckItem label="Pneus calibrados" active={formData.pneus_rodas.pneus} onToggle={() => handleToggle('pneus_rodas', 'pneus')} />
             <CheckItem label="Desgaste uniforme dos pneus" active={formData.pneus_rodas.desgaste} onToggle={() => handleToggle('pneus_rodas', 'desgaste')} />
             <CheckItem label="Sulcos acima do limite mínimo" active={formData.pneus_rodas.sulcos} onToggle={() => handleToggle('pneus_rodas', 'sulcos')} />
             <CheckItem label="Estepe em bom estado" active={formData.pneus_rodas.estepe} onToggle={() => handleToggle('pneus_rodas', 'estepe')} />
-            <CheckItem label="Macaco e chave de roda presentes" active={formData.pneus_rodas.macaco_chave} onToggle={() => handleToggle('pneus_rodas', 'macaco_chave')} />
+            <CheckItem label="Macaco e chave de roda" active={formData.pneus_rodas.macaco} onToggle={() => handleToggle('pneus_rodas', 'macaco')} />
           </Section>
 
           {/* Iluminação */}
           <Section title="Iluminação">
-            <CheckItem label="Faróis baixos e altos" active={formData.iluminacao.farois} onToggle={() => handleToggle('iluminacao', 'farois')} />
+            <CheckItem label="Luz alta e baixa" active={formData.iluminacao.luzes} onToggle={() => handleToggle('iluminacao', 'luzes')} />
             <CheckItem label="Lanternas traseiras" active={formData.iluminacao.lanternas} onToggle={() => handleToggle('iluminacao', 'lanternas')} />
             <CheckItem label="Luz de freio" active={formData.iluminacao.luz_freio} onToggle={() => handleToggle('iluminacao', 'luz_freio')} />
             <CheckItem label="Luz de ré" active={formData.iluminacao.luz_re} onToggle={() => handleToggle('iluminacao', 'luz_re')} />
-            <CheckItem label="Pisca / setas" active={formData.iluminacao.pisca} onToggle={() => handleToggle('iluminacao', 'pisca')} />
+            <CheckItem label="Setas" active={formData.iluminacao.setas} onToggle={() => handleToggle('iluminacao', 'setas')} />
             <CheckItem label="Luz de placa" active={formData.iluminacao.luz_placa} onToggle={() => handleToggle('iluminacao', 'luz_placa')} />
             <CheckItem label="Farol de neblina (se houver)" active={formData.iluminacao.farol_neblina} onToggle={() => handleToggle('iluminacao', 'farol_neblina')} />
           </Section>
@@ -306,7 +309,7 @@ export default function App() {
             <CheckItem label="Funcionamento dos cintos de segurança" active={formData.interior.cintos} onToggle={() => handleToggle('interior', 'cintos')} />
             <CheckItem label="Bancos firmes e regulagem funcionando" active={formData.interior.bancos} onToggle={() => handleToggle('interior', 'bancos')} />
             <CheckItem label="Painel sem alertas acesos" active={formData.interior.painel} onToggle={() => handleToggle('interior', 'painel')} />
-            <CheckItem label="Ar-condicionado / ventilação" active={formData.interior.ar_condicionado} onToggle={() => handleToggle('interior', 'ar_condicionado')} />
+            <CheckItem label="Ar-condicionado" active={formData.interior.arCondicionado} onToggle={() => handleToggle('interior', 'arCondicionado')} />
             <CheckItem label="Vidros elétricos" active={formData.interior.vidros_eletricos} onToggle={() => handleToggle('interior', 'vidros_eletricos')} />
             <CheckItem label="Travamento das portas" active={formData.interior.travamento} onToggle={() => handleToggle('interior', 'travamento')} />
             <CheckItem label="Buzina funcionando" active={formData.interior.buzina} onToggle={() => handleToggle('interior', 'buzina')} />
@@ -338,9 +341,6 @@ export default function App() {
           {/* Equipamentos Obrigatórios */}
           <Section title="Equipamentos Obrigatórios">
             <CheckItem label="Triângulo de sinalização" active={formData.equipamentos.triangulo} onToggle={() => handleToggle('equipamentos', 'triangulo')} />
-            <CheckItem label="Macaco" active={formData.equipamentos.macaco} onToggle={() => handleToggle('equipamentos', 'macaco')} />
-            <CheckItem label="Chave de roda" active={formData.equipamentos.chave_roda} onToggle={() => handleToggle('equipamentos', 'chave_roda')} />
-            <CheckItem label="Estepe" active={formData.equipamentos.estepe} onToggle={() => handleToggle('equipamentos', 'estepe')} />
           </Section>
         </>
       );
@@ -349,11 +349,22 @@ export default function App() {
 
   // Inicializar Auth
   useEffect(() => {
-    
+    const resolveRedirectResult = async () => {
+      try {
+        await getRedirectResult(auth);
+      } catch (err) {
+        console.error('Erro no login por redirecionamento:', err);
+        setAuthError('Não foi possível concluir o login no retorno do Google. Tente novamente.');
+      }
+    };
+
+    resolveRedirectResult();
+
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setLoading(false);
     });
+
     return () => unsubscribe();
   }, []);
 
@@ -373,10 +384,38 @@ export default function App() {
 
   const login = async () => {
     const provider = new GoogleAuthProvider();
+    setAuthError('');
+
+    const isMobileBrowser = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|CriOS|FxiOS/i.test(navigator.userAgent);
+
     try {
+      if (isMobileBrowser) {
+        await signInWithRedirect(auth, provider);
+        return;
+      }
+
       await signInWithPopup(auth, provider);
     } catch (err) {
-      console.error(err);
+      const fallbackToRedirectCodes = new Set([
+        'auth/popup-blocked',
+        'auth/popup-closed-by-user',
+        'auth/cancelled-popup-request',
+        'auth/operation-not-supported-in-this-environment'
+      ]);
+
+      if (fallbackToRedirectCodes.has(err?.code)) {
+        try {
+          await signInWithRedirect(auth, provider);
+          return;
+        } catch (redirectErr) {
+          console.error('Erro ao fazer fallback para redirect:', redirectErr);
+          setAuthError('Seu navegador bloqueou o pop-up e não foi possível redirecionar para login.');
+          return;
+        }
+      }
+
+      console.error('Erro no login com Google:', err);
+      setAuthError('Não foi possível entrar com Google. Verifique sua conexão e tente novamente.');
     }
   };
 
@@ -464,22 +503,27 @@ export default function App() {
     'parte_externa.alinhamento': 'Alinhamento de portas, capô e porta-malas',
     'parte_externa.vidros': 'Vidros sem trincas ou rachaduras',
     'parte_externa.retrovisores': 'Retrovisores firmes e íntegros',
-    'pneus_rodas.calibragem': 'Calibragem correta',
+    'pneus_rodas.pneus': 'Pneus calibrados',
+    'pneus_rodas.calibragem': 'Pneus calibrados',
     'pneus_rodas.desgaste': 'Desgaste uniforme dos pneus',
     'pneus_rodas.sulcos': 'Sulcos acima do limite mínimo',
     'pneus_rodas.estepe': 'Estepe em bom estado',
-    'pneus_rodas.macaco_chave': 'Macaco e chave de roda presentes',
-    'iluminacao.farois': 'Faróis baixos e altos',
+    'pneus_rodas.macaco': 'Macaco e chave de roda',
+    'pneus_rodas.macaco_chave': 'Macaco e chave de roda',
+    'iluminacao.luzes': 'Luz alta e baixa',
+    'iluminacao.farois': 'Luz alta e baixa',
     'iluminacao.lanternas': 'Lanternas traseiras',
     'iluminacao.luz_freio': 'Luz de freio',
     'iluminacao.luz_re': 'Luz de ré',
-    'iluminacao.pisca': 'Pisca / setas',
+    'iluminacao.setas': 'Setas',
+    'iluminacao.pisca': 'Setas',
     'iluminacao.luz_placa': 'Luz de placa',
     'iluminacao.farol_neblina': 'Farol de neblina (se houver)',
     'interior.cintos': 'Funcionamento dos cintos de segurança',
     'interior.bancos': 'Bancos firmes e regulagem funcionando',
     'interior.painel': 'Painel sem alertas acesos',
-    'interior.ar_condicionado': 'Ar-condicionado / ventilação',
+    'interior.arCondicionado': 'Ar-condicionado',
+    'interior.ar_condicionado': 'Ar-condicionado',
     'interior.vidros_eletricos': 'Vidros elétricos',
     'interior.travamento': 'Travamento das portas',
     'interior.buzina': 'Buzina funcionando',
@@ -657,6 +701,9 @@ export default function App() {
         <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
         Entrar com Google
       </button>
+      {authError && (
+        <p className="mt-3 text-xs text-red-600 max-w-xs">{authError}</p>
+      )}
       <p className="mt-12 text-[10px] text-gray-400 uppercase tracking-widest font-bold">Unidade Mista São Vicente de Paulo</p>
     </div>
   );

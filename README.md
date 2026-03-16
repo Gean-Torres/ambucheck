@@ -48,6 +48,10 @@ npm run preview
 ```
 
 
+
+## Unificação entre checklist de ambulância e carro pequeno
+Foi documentada uma proposta de núcleo comum + módulos específicos no arquivo `docs_unificacao_checklists.md`.
+
 ## Fluxo offline (revisado)
 - O app registra `public/sw.js` e faz cache do app shell (`/`, `/index.html`, `manifest`, ícones principais).
 - Requisições de `script/style/image/font/document` usam estratégia **stale-while-revalidate**, permitindo recarregar a aplicação sem internet após o primeiro carregamento.
