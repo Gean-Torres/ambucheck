@@ -47,6 +47,18 @@ npm run build
 npm run preview
 ```
 
+
+## Fluxo offline (revisado)
+- O app registra `public/sw.js` e faz cache do app shell (`/`, `/index.html`, `manifest`, ícones principais).
+- Requisições de `script/style/image/font/document` usam estratégia **stale-while-revalidate**, permitindo recarregar a aplicação sem internet após o primeiro carregamento.
+- Envio de checklist offline continua no `localStorage` (`pendingChecklists`) via hook `useOfflineStorage`.
+- Ao voltar online, o app tenta sincronizar imediatamente (`useOnlineStatus`) e também responde ao evento de background sync disparado pelo Service Worker.
+- O indicador de status mostra feedback visual: **Sincronizando**, **Sincronizado** ou **Falha na sincronização** quando há erro ao reenviar pendências.
+
+### Limitações importantes
+- Login Google e chamadas ao Firestore **dependem de internet** no momento da autenticação/sincronização.
+- Para usar offline, o usuário precisa abrir o app ao menos uma vez online no navegador/dispositivo.
+
 ## Configuração Firebase
 As credenciais estão em `firebase.js`. Para produção, prefira variáveis de ambiente (`import.meta.env`) e nunca versione segredos reais.
 
