@@ -11,6 +11,8 @@ export default function ExportHistoryModal({
   setExportEnd,
   vehicleTypeFilter,
   setVehicleTypeFilter,
+  exportLayout,
+  setExportLayout,
   onClose,
   onExport,
 }) {
@@ -41,6 +43,26 @@ export default function ExportHistoryModal({
             <option value="ambulancia">Apenas Ambulância</option>
             <option value="carro_pequeno">Apenas Carro Pequeno</option>
           </select>
+        </div>
+
+        <div className="flex flex-col">
+          <label className="text-sm font-medium">Layout do CSV</label>
+          <div className="mt-1 inline-flex rounded border overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setExportLayout('horizontal')}
+              className={`px-3 py-2 text-sm ${exportLayout === 'horizontal' ? 'bg-red-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              Horizontal
+            </button>
+            <button
+              type="button"
+              onClick={() => setExportLayout('vertical')}
+              className={`px-3 py-2 text-sm border-l ${exportLayout === 'vertical' ? 'bg-red-600 text-white' : 'bg-white text-gray-700'}`}
+            >
+              Vertical
+            </button>
+          </div>
         </div>
 
         <div className="flex flex-col">
