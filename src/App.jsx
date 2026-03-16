@@ -813,7 +813,10 @@ export default function App() {
       {authError && (
         <p className="mt-3 text-xs text-red-600 max-w-xs">{authError}</p>
       )}
-      <p className="mt-12 text-[10px] text-gray-400 uppercase tracking-widest font-bold">Unidade Mista São Vicente de Paulo</p>
+      <div className="mt-12 text-center space-y-1">
+        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Secretaria Municipal de Sáude de Datas 2026</p>
+        <p className="text-[10px] text-gray-400">Developed by Gean Torres</p>
+      </div>
     </div>
   );
 
@@ -1021,6 +1024,11 @@ export default function App() {
           onExport={handleExport}
         />
       )}
+
+      {/* Footer */}
+      <footer className="mt-20 mb-20 text-center space-y-1 py-4">
+        <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Secretaria Municipal de Sáude de Datas 2026</p>
+      </footer>
 
       {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-around shadow-lg">
