@@ -148,7 +148,7 @@ export default function App() {
         lixoInfectante: false, lixoComum: false, desinfetante: false, 
         papelToalha: false, caixaPerfuro: false
       },
-      liberada: true,
+      liberada: false,
       assinatura: '',
       driverName: '',
       veiculoNome: '',
@@ -185,7 +185,7 @@ export default function App() {
       equipamentos: {
         triangulo: false, macaco: false, chave_roda: false, estepe: false
       },
-      liberada: true,
+      liberada: false,
       assinatura: '',
       driverName: '',
       veiculoNome: '',
