@@ -4,6 +4,9 @@ export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [syncStatus, setSyncStatus] = useState('idle'); // 'idle', 'syncing', 'success', 'error'
 
+  // Access the offline storage helpers so we can sync pending checklists
+  const { getPendingChecklists, removePendingChecklist } = useOfflineStorage();
+
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
