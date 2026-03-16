@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'ambulcheck-static-v2';
-const DYNAMIC_CACHE = 'ambulcheck-dynamic-v2';
+const STATIC_CACHE = 'ambulcheck-static-v3';
+const DYNAMIC_CACHE = 'ambulcheck-dynamic-v3';
 
 // Recursos essenciais para inicialização offline (app shell)
 const STATIC_ASSETS = [
@@ -47,6 +47,7 @@ self.addEventListener('fetch', (event) => {
 
   // Firebase/Auth requests devem continuar rede-first e sem interceptação
   if (
+    event.request.url.includes('/__/auth/') ||
     event.request.url.includes('firestore.googleapis.com') ||
     event.request.url.includes('firebaseio.com') ||
     event.request.url.includes('googleapis.com/identitytoolkit')
