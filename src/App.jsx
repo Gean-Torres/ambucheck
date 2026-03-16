@@ -31,6 +31,8 @@ import {
 } from 'lucide-react';
 import ExportHistoryModal from './components/modals/ExportHistoryModal';
 import BaseModal from './components/modals/BaseModal';
+import OnlineStatusIndicator from './components/OnlineStatusIndicator';
+import { useOnlineStatus, useOfflineStorage } from './hooks/useOnlineStatus';
 
 // Firebase is initialized in `firebase.js` and exported as `app`, `auth`, `db`.
 const appId = 'ambulance-checklist-app';
@@ -116,6 +118,9 @@ const SignaturePad = ({ onSave, onClear }) => {
 
 // --- Aplicação Principal ---
 export default function App() {
+  const { isOnline, syncStatus, setSyncStatus } = useOnlineStatus();
+  const { storePendingChecklist, getPendingChecklists, removePendingChecklist } = useOfflineStorage();
+
   const [user, setUser] = useState(null);
   const [view, setView] = useState('form'); // 'form' ou 'history'
   const [loading, setLoading] = useState(true);
@@ -196,6 +201,7 @@ export default function App() {
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportStart, setExportStart] = useState('');
   const [exportEnd, setExportEnd] = useState('');
+  const [vehicleTypeFilter, setVehicleTypeFilter] = useState('all'); // 'all', 'ambulancia', 'carro_pequeno'
 
   const selectVehicleType = (type) => {
     setVehicleType(type);
@@ -510,7 +516,11 @@ export default function App() {
     const startTs = startDate.getTime();
     const endTs = endDate.getTime();
     const filtered = history.filter(
-      (item) => item.createdAt >= startTs && item.createdAt <= endTs
+      (item) => {
+        const inDateRange = item.createdAt >= startTs && item.createdAt <= endTs;
+        const matchesType = vehicleTypeFilter === 'all' || item.vehicleType === vehicleTypeFilter;
+        return inDateRange && matchesType;
+      }
     );
     if (filtered.length === 0) {
       alert('Nenhum registro no período selecionado.');
@@ -548,6 +558,7 @@ export default function App() {
     setShowExportModal(false);
     setExportStart('');
     setExportEnd('');
+    setVehicleTypeFilter('all'); // Reset filter after export
   };
 
   const handleSubmit = async (e) => {
@@ -568,8 +579,7 @@ export default function App() {
 
     setSubmitting(true);
     try {
-      console.log("Tentando enviar checklist para Firestore...", { uid: user.uid, name: formData.driverName });
-      const docRef = await addDoc(collection(db, 'checklists'), {
+      const checklistData = {
         ...formData,
         vehicleType,
         motorista: formData.driverName,
@@ -577,13 +587,46 @@ export default function App() {
         motoristaUid: user.uid,
         createdAt: Date.now(),
         dataString: new Date().toLocaleString('pt-BR')
-      });
-      console.log("✅ Checklist salvo com sucesso! ID:", docRef.id);
-      setFormData(initialFormStates[vehicleType]);
-      setView('history');
+      };
+
+      if (isOnline) {
+        // Online: send directly to Firestore
+        console.log("Tentando enviar checklist para Firestore...", { uid: user.uid, name: formData.driverName });
+        const docRef = await addDoc(collection(db, 'checklists'), checklistData);
+        console.log("✅ Checklist salvo com sucesso! ID:", docRef.id);
+        setFormData(initialFormStates[vehicleType]);
+        setView('history');
+      } else {
+        // Offline: store locally and show message
+        console.log("Offline: armazenando checklist localmente...");
+        await storePendingChecklist(checklistData);
+        alert("✅ Checklist salvo localmente! Será sincronizado quando você voltar online.");
+        setFormData(initialFormStates[vehicleType]);
+        setView('history');
+      }
     } catch (err) {
       console.error("❌ Erro ao salvar:", err.code, err.message);
-      alert(`Erro ao salvar: ${err.message}`);
+      if (!isOnline) {
+        // Try to store offline even if there was an error
+        try {
+          await storePendingChecklist({
+            ...formData,
+            vehicleType,
+            motorista: formData.driverName,
+            loggedInUser: user.displayName || user.email,
+            motoristaUid: user.uid,
+            createdAt: Date.now(),
+            dataString: new Date().toLocaleString('pt-BR')
+          });
+          alert("⚠️ Erro de conexão, mas dados salvos localmente. Serão sincronizados quando online.");
+          setFormData(initialFormStates[vehicleType]);
+          setView('history');
+        } catch (offlineErr) {
+          alert(`Erro ao salvar offline: ${offlineErr.message}`);
+        }
+      } else {
+        alert(`Erro ao salvar: ${err.message}`);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -651,6 +694,9 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {/* Online Status Indicator */}
+      <OnlineStatusIndicator isOnline={isOnline} syncStatus={syncStatus} />
 
       {/* Main Content */}
       <main className="max-w-2xl mx-auto p-4 sm:p-6">
@@ -807,7 +853,12 @@ export default function App() {
           exportEnd={exportEnd}
           setExportStart={setExportStart}
           setExportEnd={setExportEnd}
-          onClose={() => setShowExportModal(false)}
+          vehicleTypeFilter={vehicleTypeFilter}
+          setVehicleTypeFilter={setVehicleTypeFilter}
+          onClose={() => {
+            setShowExportModal(false);
+            setVehicleTypeFilter('all'); // Reset filter when modal closes
+          }}
           onExport={handleExport}
         />
       )}
