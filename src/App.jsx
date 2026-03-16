@@ -133,10 +133,41 @@ export default function App() {
 // Estado do Formulário
   const initialFormStates = {
     ambulancia: {
-      veiculo: {
+      documentacao: {
+        crlv: false, licenciamento: false, seguro: false, manual: false
+      },
+      veiculo_comum: {
         combustivel: false, oleo: false, agua: false, pneus: false, estepe: false, 
-        macaco: false, luzes: false, setas: false, giroflex: false, sirene: false, 
-        limpador: false, arCondicionado: false, maca: false, travasMaca: false
+        macaco: false, luzes: false, limpador: false, arCondicionado: false
+      },
+      iluminacao_carro: {
+        lanternas: false, luz_freio: false, luz_re: false, setas: false, 
+        luz_placa: false, farol_neblina: false
+      },
+      parte_externa: {
+        pintura: false, riscos: false, alinhamento: false, vidros: false, retrovisores: false
+      },
+      pneus_rodas: {
+        desgaste: false, sulcos: false
+      },
+      interior: {
+        cintos: false, bancos: false, painel: false, vidros_eletricos: false, 
+        travamento: false, buzina: false
+      },
+      motor_fluidos: {
+        arrefecimento: false, freio: false, vazamentos: false
+      },
+      freios: {
+        pedal: false, freio_mao: false, ruidos: false
+      },
+      suspensao_direcao: {
+        ruidos: false, direcao: false, volante: false
+      },
+      equipamentos: {
+        triangulo: false
+      },
+      veiculo_ambulancia: {
+        setas: false, giroflex: false, sirene: false, maca: false, travasMaca: false
       },
       imobilizacao: {
         prancha: false, cintoAranha: false, headBlock: false, colares: false, 
@@ -162,22 +193,26 @@ export default function App() {
       documentacao: {
         crlv: false, licenciamento: false, seguro: false, manual: false
       },
+      veiculo_comum: {
+        combustivel: false, oleo: false, agua: false, pneus: false, estepe: false, 
+        macaco: false, luzes: false, limpador: false, arCondicionado: false
+      },
+      iluminacao_carro: {
+        lanternas: false, luz_freio: false, luz_re: false, setas: false, 
+        luz_placa: false, farol_neblina: false
+      },
       parte_externa: {
         pintura: false, riscos: false, alinhamento: false, vidros: false, retrovisores: false
       },
       pneus_rodas: {
-        pneus: false, desgaste: false, sulcos: false, estepe: false, macaco: false
-      },
-      iluminacao: {
-        luzes: false, lanternas: false, luz_freio: false, luz_re: false, 
-        setas: false, luz_placa: false, farol_neblina: false
+        desgaste: false, sulcos: false
       },
       interior: {
-        cintos: false, bancos: false, painel: false, arCondicionado: false, 
-        vidros_eletricos: false, travamento: false, buzina: false
+        cintos: false, bancos: false, painel: false, vidros_eletricos: false, 
+        travamento: false, buzina: false
       },
       motor_fluidos: {
-        oleo: false, arrefecimento: false, freio: false, limpador: false, vazamentos: false
+        arrefecimento: false, freio: false, vazamentos: false
       },
       freios: {
         pedal: false, freio_mao: false, ruidos: false
@@ -213,29 +248,96 @@ export default function App() {
   };
 
   const renderFormSections = () => {
+    const renderCommonSections = () => (
+      <>
+        {/* Segurança e Rodagem */}
+        <Section title="Segurança e Rodagem">
+          <CheckItem label="Pneus calibrados" active={formData.veiculo_comum.pneus} onToggle={() => handleToggle('veiculo_comum', 'pneus')} />
+          <CheckItem label="Estepe em condições" active={formData.veiculo_comum.estepe} onToggle={() => handleToggle('veiculo_comum', 'estepe')} />
+          <CheckItem label="Macaco e chave de roda" active={formData.veiculo_comum.macaco} onToggle={() => handleToggle('veiculo_comum', 'macaco')} />
+          <CheckItem label="Pedal de freio firme" active={formData.freios.pedal} onToggle={() => handleToggle('freios', 'pedal')} />
+          <CheckItem label="Freio de mão funcionando" active={formData.freios.freio_mao} onToggle={() => handleToggle('freios', 'freio_mao')} />
+          <CheckItem label="Ausência de ruídos ao frear" active={formData.freios.ruidos} onToggle={() => handleToggle('freios', 'ruidos')} />
+          <CheckItem label="Sem ruídos ao passar em irregularidades" active={formData.suspensao_direcao.ruidos} onToggle={() => handleToggle('suspensao_direcao', 'ruidos')} />
+          <CheckItem label="Direção alinhada" active={formData.suspensao_direcao.direcao} onToggle={() => handleToggle('suspensao_direcao', 'direcao')} />
+          <CheckItem label="Volante sem vibrações" active={formData.suspensao_direcao.volante} onToggle={() => handleToggle('suspensao_direcao', 'volante')} />
+          <CheckItem label="Triângulo de sinalização" active={formData.equipamentos.triangulo} onToggle={() => handleToggle('equipamentos', 'triangulo')} />
+        </Section>
+
+        {/* Iluminação e Sinalização */}
+        <Section title="Iluminação e Sinalização">
+          <CheckItem label="Luz alta e baixa" active={formData.veiculo_comum.luzes} onToggle={() => handleToggle('veiculo_comum', 'luzes')} />
+          <CheckItem label="Lanternas traseiras" active={formData.iluminacao_carro.lanternas} onToggle={() => handleToggle('iluminacao_carro', 'lanternas')} />
+          <CheckItem label="Luz de freio" active={formData.iluminacao_carro.luz_freio} onToggle={() => handleToggle('iluminacao_carro', 'luz_freio')} />
+          <CheckItem label="Luz de ré" active={formData.iluminacao_carro.luz_re} onToggle={() => handleToggle('iluminacao_carro', 'luz_re')} />
+          <CheckItem label="Setas" active={formData.iluminacao_carro.setas} onToggle={() => handleToggle('iluminacao_carro', 'setas')} />
+          <CheckItem label="Luz de placa" active={formData.iluminacao_carro.luz_placa} onToggle={() => handleToggle('iluminacao_carro', 'luz_placa')} />
+          <CheckItem label="Farol de neblina (se houver)" active={formData.iluminacao_carro.farol_neblina} onToggle={() => handleToggle('iluminacao_carro', 'farol_neblina')} />
+        </Section>
+
+        {/* Fluidos e Motor */}
+        <Section title="Fluidos e Motor">
+          <CheckItem label="Combustível acima de ½ tanque" active={formData.veiculo_comum.combustivel} onToggle={() => handleToggle('veiculo_comum', 'combustivel')} />
+          <CheckItem label="Óleo do motor" active={formData.veiculo_comum.oleo} onToggle={() => handleToggle('veiculo_comum', 'oleo')} />
+          <CheckItem label="Água do radiador" active={formData.veiculo_comum.agua} onToggle={() => handleToggle('veiculo_comum', 'agua')} />
+          <CheckItem label="Limpador de para-brisa" active={formData.veiculo_comum.limpador} onToggle={() => handleToggle('veiculo_comum', 'limpador')} />
+          <CheckItem label="Nível do líquido de arrefecimento" active={formData.motor_fluidos.arrefecimento} onToggle={() => handleToggle('motor_fluidos', 'arrefecimento')} />
+          <CheckItem label="Fluído de freio" active={formData.motor_fluidos.freio} onToggle={() => handleToggle('motor_fluidos', 'freio')} />
+          <CheckItem label="Vazamentos aparentes no motor" active={formData.motor_fluidos.vazamentos} onToggle={() => handleToggle('motor_fluidos', 'vazamentos')} />
+        </Section>
+
+        {/* Cabine e Conforto Operacional */}
+        <Section title="Cabine e Conforto Operacional">
+          <CheckItem label="Ar-condicionado" active={formData.veiculo_comum.arCondicionado} onToggle={() => handleToggle('veiculo_comum', 'arCondicionado')} />
+          <CheckItem label="Funcionamento dos cintos de segurança" active={formData.interior.cintos} onToggle={() => handleToggle('interior', 'cintos')} />
+          <CheckItem label="Bancos firmes e regulagem funcionando" active={formData.interior.bancos} onToggle={() => handleToggle('interior', 'bancos')} />
+          <CheckItem label="Painel sem alertas acesos" active={formData.interior.painel} onToggle={() => handleToggle('interior', 'painel')} />
+          <CheckItem label="Vidros elétricos" active={formData.interior.vidros_eletricos} onToggle={() => handleToggle('interior', 'vidros_eletricos')} />
+          <CheckItem label="Travamento das portas" active={formData.interior.travamento} onToggle={() => handleToggle('interior', 'travamento')} />
+          <CheckItem label="Buzina funcionando" active={formData.interior.buzina} onToggle={() => handleToggle('interior', 'buzina')} />
+        </Section>
+
+        {/* Parte Externa */}
+        <Section title="Parte Externa">
+          <CheckItem label="Estado geral da pintura" active={formData.parte_externa.pintura} onToggle={() => handleToggle('parte_externa', 'pintura')} />
+          <CheckItem label="Presença de riscos, amassados ou ferrugem" active={formData.parte_externa.riscos} onToggle={() => handleToggle('parte_externa', 'riscos')} />
+          <CheckItem label="Alinhamento de portas, capô e porta-malas" active={formData.parte_externa.alinhamento} onToggle={() => handleToggle('parte_externa', 'alinhamento')} />
+          <CheckItem label="Vidros sem trincas ou rachaduras" active={formData.parte_externa.vidros} onToggle={() => handleToggle('parte_externa', 'vidros')} />
+          <CheckItem label="Retrovisores firmes e íntegros" active={formData.parte_externa.retrovisores} onToggle={() => handleToggle('parte_externa', 'retrovisores')} />
+        </Section>
+
+        {/* Pneus e Rodas */}
+        <Section title="Pneus e Rodas">
+          <CheckItem label="Desgaste uniforme dos pneus" active={formData.pneus_rodas.desgaste} onToggle={() => handleToggle('pneus_rodas', 'desgaste')} />
+          <CheckItem label="Sulcos acima do limite mínimo" active={formData.pneus_rodas.sulcos} onToggle={() => handleToggle('pneus_rodas', 'sulcos')} />
+        </Section>
+
+        {/* Documentação */}
+        <Section title="Documentação">
+          <CheckItem label="CRLV / documento do veículo em dia" active={formData.documentacao.crlv} onToggle={() => handleToggle('documentacao', 'crlv')} />
+          <CheckItem label="Licenciamento pago" active={formData.documentacao.licenciamento} onToggle={() => handleToggle('documentacao', 'licenciamento')} />
+          <CheckItem label="Seguro obrigatório / seguro do veículo (se houver)" active={formData.documentacao.seguro} onToggle={() => handleToggle('documentacao', 'seguro')} />
+          <CheckItem label="Manual do proprietário no carro" active={formData.documentacao.manual} onToggle={() => handleToggle('documentacao', 'manual')} />
+        </Section>
+      </>
+    );
+
     if (vehicleType === 'ambulancia') {
       return (
         <>
-          {/* 1. Condições do Veículo */}
-          <Section title="1. Condições do Veículo">
-            <CheckItem label="Combustível acima de ½ tanque" active={formData.veiculo.combustivel} onToggle={() => handleToggle('veiculo', 'combustivel')} />
-            <CheckItem label="Óleo do motor" active={formData.veiculo.oleo} onToggle={() => handleToggle('veiculo', 'oleo')} />
-            <CheckItem label="Água do radiador" active={formData.veiculo.agua} onToggle={() => handleToggle('veiculo', 'agua')} />
-            <CheckItem label="Pneus calibrados" active={formData.veiculo.pneus} onToggle={() => handleToggle('veiculo', 'pneus')} />
-            <CheckItem label="Estepe em condições" active={formData.veiculo.estepe} onToggle={() => handleToggle('veiculo', 'estepe')} />
-            <CheckItem label="Macaco e chave de roda" active={formData.veiculo.macaco} onToggle={() => handleToggle('veiculo', 'macaco')} />
-            <CheckItem label="Luz alta e baixa" active={formData.veiculo.luzes} onToggle={() => handleToggle('veiculo', 'luzes')} />
-            <CheckItem label="Setas e luz de freio" active={formData.veiculo.setas} onToggle={() => handleToggle('veiculo', 'setas')} />
-            <CheckItem label="Giroflex funcionando" active={formData.veiculo.giroflex} onToggle={() => handleToggle('veiculo', 'giroflex')} />
-            <CheckItem label="Sirene funcionando" active={formData.veiculo.sirene} onToggle={() => handleToggle('veiculo', 'sirene')} />
-            <CheckItem label="Limpador de para-brisa" active={formData.veiculo.limpador} onToggle={() => handleToggle('veiculo', 'limpador')} />
-            <CheckItem label="Ar-condicionado" active={formData.veiculo.arCondicionado} onToggle={() => handleToggle('veiculo', 'arCondicionado')} />
-            <CheckItem label="Maca principal funcionando" active={formData.veiculo.maca} onToggle={() => handleToggle('veiculo', 'maca')} />
-            <CheckItem label="Travas da maca" active={formData.veiculo.travasMaca} onToggle={() => handleToggle('veiculo', 'travasMaca')} />
+          {renderCommonSections()}
+
+          {/* Equipamentos Específicos - Ambulância */}
+          <Section title="Equipamentos Específicos da Ambulância">
+            <CheckItem label="Setas e luz de freio" active={formData.veiculo_ambulancia.setas} onToggle={() => handleToggle('veiculo_ambulancia', 'setas')} />
+            <CheckItem label="Giroflex funcionando" active={formData.veiculo_ambulancia.giroflex} onToggle={() => handleToggle('veiculo_ambulancia', 'giroflex')} />
+            <CheckItem label="Sirene funcionando" active={formData.veiculo_ambulancia.sirene} onToggle={() => handleToggle('veiculo_ambulancia', 'sirene')} />
+            <CheckItem label="Maca principal funcionando" active={formData.veiculo_ambulancia.maca} onToggle={() => handleToggle('veiculo_ambulancia', 'maca')} />
+            <CheckItem label="Travas da maca" active={formData.veiculo_ambulancia.travasMaca} onToggle={() => handleToggle('veiculo_ambulancia', 'travasMaca')} />
           </Section>
 
           {/* 2. Imobilização */}
-          <Section title="2. Equipamentos de Imobilização">
+          <Section title="Equipamentos de Imobilização">
             <CheckItem label="Prancha longa" active={formData.imobilizacao.prancha} onToggle={() => handleToggle('imobilizacao', 'prancha')} />
             <CheckItem label="Cinto aranha" active={formData.imobilizacao.cintoAranha} onToggle={() => handleToggle('imobilizacao', 'cintoAranha')} />
             <CheckItem label="Tirante de cabeça (head block)" active={formData.imobilizacao.headBlock} onToggle={() => handleToggle('imobilizacao', 'headBlock')} />
@@ -247,7 +349,7 @@ export default function App() {
           </Section>
 
           {/* 3. Oxigenação */}
-          <Section title="3. Oxigenação e Ventilação">
+          <Section title="Oxigenação e Ventilação">
             <CheckItem label="Cilindro de oxigênio cheio" active={formData.oxigenacao.cilindroCheio} onToggle={() => handleToggle('oxigenacao', 'cilindroCheio')} />
             <CheckItem label="Cilindro reserva" active={formData.oxigenacao.cilindroReserva} onToggle={() => handleToggle('oxigenacao', 'cilindroReserva')} />
             <CheckItem label="Fluxômetro e Umidificador" active={formData.oxigenacao.fluxometro} onToggle={() => handleToggle('oxigenacao', 'fluxometro')} />
@@ -257,7 +359,7 @@ export default function App() {
           </Section>
 
           {/* 4. Biossegurança */}
-          <Section title="4. Biossegurança">
+          <Section title="Biossegurança">
             <CheckItem label="Sacou para lixo infectante/comum" active={formData.biosseguranca.lixoInfectante} onToggle={() => handleToggle('biosseguranca', 'lixoInfectante')} />
             <CheckItem label="Desinfetante e Papel Toalha" active={formData.biosseguranca.desinfetante} onToggle={() => handleToggle('biosseguranca', 'desinfetante')} />
             <CheckItem label="Caixa coletora perfurocortante" active={formData.biosseguranca.caixaPerfuro} onToggle={() => handleToggle('biosseguranca', 'caixaPerfuro')} />
@@ -267,81 +369,7 @@ export default function App() {
     } else if (vehicleType === 'carro_pequeno') {
       return (
         <>
-          {/* Documentação */}
-          <Section title="Documentação">
-            <CheckItem label="CRLV / documento do veículo em dia" active={formData.documentacao.crlv} onToggle={() => handleToggle('documentacao', 'crlv')} />
-            <CheckItem label="Licenciamento pago" active={formData.documentacao.licenciamento} onToggle={() => handleToggle('documentacao', 'licenciamento')} />
-            <CheckItem label="Seguro obrigatório / seguro do veículo (se houver)" active={formData.documentacao.seguro} onToggle={() => handleToggle('documentacao', 'seguro')} />
-            <CheckItem label="Manual do proprietário no carro" active={formData.documentacao.manual} onToggle={() => handleToggle('documentacao', 'manual')} />
-          </Section>
-
-          {/* Parte Externa */}
-          <Section title="Parte Externa">
-            <CheckItem label="Estado geral da pintura" active={formData.parte_externa.pintura} onToggle={() => handleToggle('parte_externa', 'pintura')} />
-            <CheckItem label="Presença de riscos, amassados ou ferrugem" active={formData.parte_externa.riscos} onToggle={() => handleToggle('parte_externa', 'riscos')} />
-            <CheckItem label="Alinhamento de portas, capô e porta-malas" active={formData.parte_externa.alinhamento} onToggle={() => handleToggle('parte_externa', 'alinhamento')} />
-            <CheckItem label="Vidros sem trincas ou rachaduras" active={formData.parte_externa.vidros} onToggle={() => handleToggle('parte_externa', 'vidros')} />
-            <CheckItem label="Retrovisores firmes e íntegros" active={formData.parte_externa.retrovisores} onToggle={() => handleToggle('parte_externa', 'retrovisores')} />
-          </Section>
-
-          {/* Pneus e Rodas */}
-          <Section title="Pneus e Rodas">
-            <CheckItem label="Pneus calibrados" active={formData.pneus_rodas.pneus} onToggle={() => handleToggle('pneus_rodas', 'pneus')} />
-            <CheckItem label="Desgaste uniforme dos pneus" active={formData.pneus_rodas.desgaste} onToggle={() => handleToggle('pneus_rodas', 'desgaste')} />
-            <CheckItem label="Sulcos acima do limite mínimo" active={formData.pneus_rodas.sulcos} onToggle={() => handleToggle('pneus_rodas', 'sulcos')} />
-            <CheckItem label="Estepe em bom estado" active={formData.pneus_rodas.estepe} onToggle={() => handleToggle('pneus_rodas', 'estepe')} />
-            <CheckItem label="Macaco e chave de roda" active={formData.pneus_rodas.macaco} onToggle={() => handleToggle('pneus_rodas', 'macaco')} />
-          </Section>
-
-          {/* Iluminação */}
-          <Section title="Iluminação">
-            <CheckItem label="Luz alta e baixa" active={formData.iluminacao.luzes} onToggle={() => handleToggle('iluminacao', 'luzes')} />
-            <CheckItem label="Lanternas traseiras" active={formData.iluminacao.lanternas} onToggle={() => handleToggle('iluminacao', 'lanternas')} />
-            <CheckItem label="Luz de freio" active={formData.iluminacao.luz_freio} onToggle={() => handleToggle('iluminacao', 'luz_freio')} />
-            <CheckItem label="Luz de ré" active={formData.iluminacao.luz_re} onToggle={() => handleToggle('iluminacao', 'luz_re')} />
-            <CheckItem label="Setas" active={formData.iluminacao.setas} onToggle={() => handleToggle('iluminacao', 'setas')} />
-            <CheckItem label="Luz de placa" active={formData.iluminacao.luz_placa} onToggle={() => handleToggle('iluminacao', 'luz_placa')} />
-            <CheckItem label="Farol de neblina (se houver)" active={formData.iluminacao.farol_neblina} onToggle={() => handleToggle('iluminacao', 'farol_neblina')} />
-          </Section>
-
-          {/* Interior do Veículo */}
-          <Section title="Interior do Veículo">
-            <CheckItem label="Funcionamento dos cintos de segurança" active={formData.interior.cintos} onToggle={() => handleToggle('interior', 'cintos')} />
-            <CheckItem label="Bancos firmes e regulagem funcionando" active={formData.interior.bancos} onToggle={() => handleToggle('interior', 'bancos')} />
-            <CheckItem label="Painel sem alertas acesos" active={formData.interior.painel} onToggle={() => handleToggle('interior', 'painel')} />
-            <CheckItem label="Ar-condicionado" active={formData.interior.arCondicionado} onToggle={() => handleToggle('interior', 'arCondicionado')} />
-            <CheckItem label="Vidros elétricos" active={formData.interior.vidros_eletricos} onToggle={() => handleToggle('interior', 'vidros_eletricos')} />
-            <CheckItem label="Travamento das portas" active={formData.interior.travamento} onToggle={() => handleToggle('interior', 'travamento')} />
-            <CheckItem label="Buzina funcionando" active={formData.interior.buzina} onToggle={() => handleToggle('interior', 'buzina')} />
-          </Section>
-
-          {/* Motor e Fluídos */}
-          <Section title="Motor e Fluídos">
-            <CheckItem label="Nível do óleo do motor" active={formData.motor_fluidos.oleo} onToggle={() => handleToggle('motor_fluidos', 'oleo')} />
-            <CheckItem label="Nível do líquido de arrefecimento" active={formData.motor_fluidos.arrefecimento} onToggle={() => handleToggle('motor_fluidos', 'arrefecimento')} />
-            <CheckItem label="Fluído de freio" active={formData.motor_fluidos.freio} onToggle={() => handleToggle('motor_fluidos', 'freio')} />
-            <CheckItem label="Fluído do limpador de para-brisa" active={formData.motor_fluidos.limpador} onToggle={() => handleToggle('motor_fluidos', 'limpador')} />
-            <CheckItem label="Vazamentos aparentes no motor" active={formData.motor_fluidos.vazamentos} onToggle={() => handleToggle('motor_fluidos', 'vazamentos')} />
-          </Section>
-
-          {/* Sistema de Freios */}
-          <Section title="Sistema de Freios">
-            <CheckItem label="Pedal de freio firme" active={formData.freios.pedal} onToggle={() => handleToggle('freios', 'pedal')} />
-            <CheckItem label="Freio de mão funcionando" active={formData.freios.freio_mao} onToggle={() => handleToggle('freios', 'freio_mao')} />
-            <CheckItem label="Ausência de ruídos ao frear" active={formData.freios.ruidos} onToggle={() => handleToggle('freios', 'ruidos')} />
-          </Section>
-
-          {/* Suspensão e Direção */}
-          <Section title="Suspensão e Direção">
-            <CheckItem label="Sem ruídos ao passar em irregularidades" active={formData.suspensao_direcao.ruidos} onToggle={() => handleToggle('suspensao_direcao', 'ruidos')} />
-            <CheckItem label="Direção alinhada" active={formData.suspensao_direcao.direcao} onToggle={() => handleToggle('suspensao_direcao', 'direcao')} />
-            <CheckItem label="Volante sem vibrações" active={formData.suspensao_direcao.volante} onToggle={() => handleToggle('suspensao_direcao', 'volante')} />
-          </Section>
-
-          {/* Equipamentos Obrigatórios */}
-          <Section title="Equipamentos Obrigatórios">
-            <CheckItem label="Triângulo de sinalização" active={formData.equipamentos.triangulo} onToggle={() => handleToggle('equipamentos', 'triangulo')} />
-          </Section>
+          {renderCommonSections()}
         </>
       );
     }
@@ -459,20 +487,22 @@ export default function App() {
     dataString: 'Data',
     liberada: 'Liberada',
     motoristaUid: 'UID do motorista',
-    'veiculo.combustivel': 'Combustível acima de ½ tanque',
-    'veiculo.oleo': 'Óleo do motor',
-    'veiculo.agua': 'Água do radiador',
-    'veiculo.pneus': 'Pneus calibrados',
-    'veiculo.estepe': 'Estepe em condições',
-    'veiculo.macaco': 'Macaco e chave de roda',
-    'veiculo.luzes': 'Luz alta e baixa',
-    'veiculo.setas': 'Setas e luz de freio',
-    'veiculo.giroflex': 'Giroflex funcionando',
-    'veiculo.sirene': 'Sirene funcionando',
-    'veiculo.limpador': 'Limpador de para-brisa',
-    'veiculo.arCondicionado': 'Ar-condicionado',
-    'veiculo.maca': 'Maca principal funcionando',
-    'veiculo.travasMaca': 'Travas da maca',
+    // Campos comuns a todos os veículos
+    'veiculo_comum.combustivel': 'Combustível acima de ½ tanque',
+    'veiculo_comum.oleo': 'Óleo do motor',
+    'veiculo_comum.agua': 'Água do radiador',
+    'veiculo_comum.pneus': 'Pneus calibrados',
+    'veiculo_comum.estepe': 'Estepe em condições',
+    'veiculo_comum.macaco': 'Macaco e chave de roda',
+    'veiculo_comum.luzes': 'Luz alta e baixa',
+    'veiculo_comum.limpador': 'Limpador de para-brisa',
+    'veiculo_comum.arCondicionado': 'Ar-condicionado',
+    // Campos específicos da ambulância
+    'veiculo_ambulancia.setas': 'Setas e luz de freio',
+    'veiculo_ambulancia.giroflex': 'Giroflex funcionando',
+    'veiculo_ambulancia.sirene': 'Sirene funcionando',
+    'veiculo_ambulancia.maca': 'Maca principal funcionando',
+    'veiculo_ambulancia.travasMaca': 'Travas da maca',
     'imobilizacao.prancha': 'Prancha longa',
     'imobilizacao.cintoAranha': 'Cinto aranha',
     'imobilizacao.headBlock': 'Tirante de cabeça (head block)',
@@ -511,34 +541,23 @@ export default function App() {
     'parte_externa.alinhamento': 'Alinhamento de portas, capô e porta-malas',
     'parte_externa.vidros': 'Vidros sem trincas ou rachaduras',
     'parte_externa.retrovisores': 'Retrovisores firmes e íntegros',
-    'pneus_rodas.pneus': 'Pneus calibrados',
-    'pneus_rodas.calibragem': 'Pneus calibrados',
     'pneus_rodas.desgaste': 'Desgaste uniforme dos pneus',
     'pneus_rodas.sulcos': 'Sulcos acima do limite mínimo',
-    'pneus_rodas.estepe': 'Estepe em bom estado',
-    'pneus_rodas.macaco': 'Macaco e chave de roda',
-    'pneus_rodas.macaco_chave': 'Macaco e chave de roda',
-    'iluminacao.luzes': 'Luz alta e baixa',
-    'iluminacao.farois': 'Luz alta e baixa',
-    'iluminacao.lanternas': 'Lanternas traseiras',
-    'iluminacao.luz_freio': 'Luz de freio',
-    'iluminacao.luz_re': 'Luz de ré',
-    'iluminacao.setas': 'Setas',
-    'iluminacao.pisca': 'Setas',
-    'iluminacao.luz_placa': 'Luz de placa',
-    'iluminacao.farol_neblina': 'Farol de neblina (se houver)',
+    // Iluminação específica do carro
+    'iluminacao_carro.lanternas': 'Lanternas traseiras',
+    'iluminacao_carro.luz_freio': 'Luz de freio',
+    'iluminacao_carro.luz_re': 'Luz de ré',
+    'iluminacao_carro.setas': 'Setas',
+    'iluminacao_carro.luz_placa': 'Luz de placa',
+    'iluminacao_carro.farol_neblina': 'Farol de neblina (se houver)',
     'interior.cintos': 'Funcionamento dos cintos de segurança',
     'interior.bancos': 'Bancos firmes e regulagem funcionando',
     'interior.painel': 'Painel sem alertas acesos',
-    'interior.arCondicionado': 'Ar-condicionado',
-    'interior.ar_condicionado': 'Ar-condicionado',
     'interior.vidros_eletricos': 'Vidros elétricos',
     'interior.travamento': 'Travamento das portas',
     'interior.buzina': 'Buzina funcionando',
-    'motor_fluidos.oleo': 'Nível do óleo do motor',
     'motor_fluidos.arrefecimento': 'Nível do líquido de arrefecimento',
     'motor_fluidos.freio': 'Fluído de freio',
-    'motor_fluidos.limpador': 'Fluído do limpador de para-brisa',
     'motor_fluidos.vazamentos': 'Vazamentos aparentes no motor',
     'freios.pedal': 'Pedal de freio firme',
     'freios.freio_mao': 'Freio de mão funcionando',
@@ -546,10 +565,7 @@ export default function App() {
     'suspensao_direcao.ruidos': 'Sem ruídos ao passar em irregularidades',
     'suspensao_direcao.direcao': 'Direção alinhada',
     'suspensao_direcao.volante': 'Volante sem vibrações',
-    'equipamentos.triangulo': 'Triângulo de sinalização',
-    'equipamentos.macaco': 'Macaco',
-    'equipamentos.chave_roda': 'Chave de roda',
-    'equipamentos.estepe': 'Estepe'
+    'equipamentos.triangulo': 'Triângulo de sinalização'
   };
 
   const handleExport = () => {
@@ -627,6 +643,70 @@ export default function App() {
     if (!formData.assinatura) {
       alert("Por favor, assine antes de enviar.");
       return;
+    }
+
+    // Count unchecked items and get their labels
+    const getUncheckedItems = (obj, prefix = '') => {
+      let unchecked = [];
+      for (const key in obj) {
+        if (typeof obj[key] === 'boolean' && obj[key] === false) {
+          unchecked.push(prefix + key);
+        } else if (obj[key] && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+          unchecked = unchecked.concat(getUncheckedItems(obj[key], prefix + key + '.'));
+        }
+      }
+      return unchecked;
+    };
+
+    const uncheckedItems = getUncheckedItems(formData);
+    const uncheckedCount = uncheckedItems.length;
+
+    // Warning about unchecked items
+    if (uncheckedCount > 0) {
+      const proceedWithUnchecked = window.confirm(
+        `Atenção: Você tem ${uncheckedCount} item(ns) não verificado(s).\n\n` +
+        `Isso pode indicar que o veículo não está completamente pronto.\n\n` +
+        `Deseja prosseguir mesmo assim?`
+      );
+      if (!proceedWithUnchecked) {
+        return;
+      }
+    }
+
+    // Warning about vehicle status
+    if (!formData.liberada) {
+      const proceedWithNotReady = window.confirm(
+        `⚠️ ATENÇÃO: Você marcou que o veículo NÃO está liberado para atendimento.\n\n` +
+        `Isso significa que o veículo tem problemas que impedem seu uso.\n\n` +
+        `Tem certeza de que deseja enviar este checklist?`
+      );
+      if (!proceedWithNotReady) {
+        return;
+      }
+    } else {
+      // Vehicle is marked as ready, but check for unchecked items
+      if (uncheckedCount > 0) {
+        const uncheckedLabels = uncheckedItems.map(item => {
+          return fieldLabels[item] || item.replace(/^[^\.]+\./, '').replace(/\./g, ' ').replace(/([A-Z])/g, ' $1').trim();
+        }).join('\n• ');
+
+        const proceedWithFailures = window.confirm(
+          `⚠️ ATENÇÃO: O veículo foi marcado como LIBERADO, mas existem itens não verificados!\n\n` +
+          `Itens não verificados:\n• ${uncheckedLabels}\n\n` +
+          `O veículo será liberado apesar dessas falhas. Tem certeza?`
+        );
+        if (!proceedWithFailures) {
+          return;
+        }
+      } else {
+        const confirmReady = window.confirm(
+          `✅ O veículo foi marcado como LIBERADO para atendimento.\n\n` +
+          `Confirme que todas as verificações foram realizadas corretamente e o veículo está em condições seguras de uso.`
+        );
+        if (!confirmReady) {
+          return;
+        }
+      }
     }
 
     setSubmitting(true);
@@ -962,9 +1042,9 @@ function CheckItem({ label, active, onToggle }) {
   return (
     <div 
       onClick={onToggle}
-      className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${active ? 'bg-green-50 border-green-200' : 'bg-white border-gray-100'}`}
+      className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${active ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}
     >
-      <span className={`text-sm ${active ? 'text-green-700 font-medium' : 'text-gray-600'}`}>{label}</span>
+      <span className={`text-sm ${active ? 'text-green-700 font-medium' : 'text-red-600'}`}>{label}</span>
       <div className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors ${active ? 'bg-green-500' : 'bg-gray-100'}`}>
         {active && <CheckCircle2 className="text-white" size={14} />}
       </div>
@@ -979,9 +1059,10 @@ function HistoryCard({ data }) {
     if (data.vehicleType === 'carro_pequeno') {
       return [
         { key: 'documentacao', label: 'Documentação' },
+        { key: 'veiculo_comum', label: 'Veículo - Comum' },
+        { key: 'iluminacao_carro', label: 'Iluminação' },
         { key: 'parte_externa', label: 'Parte Externa' },
         { key: 'pneus_rodas', label: 'Pneus e Rodas' },
-        { key: 'iluminacao', label: 'Iluminação' },
         { key: 'interior', label: 'Interior' },
         { key: 'motor_fluidos', label: 'Motor e Fluídos' },
         { key: 'freios', label: 'Freios' },
@@ -990,8 +1071,18 @@ function HistoryCard({ data }) {
       ];
     } else {
       return [
-        { key: 'veiculo', label: 'Veículo' },
-        { key: 'imobilizacao', label: 'Imobilização' },
+        { key: 'documentacao', label: 'Documentação' },
+        { key: 'veiculo_comum', label: 'Veículo - Comum' },
+        { key: 'iluminacao_carro', label: 'Iluminação' },
+        { key: 'parte_externa', label: 'Parte Externa' },
+        { key: 'pneus_rodas', label: 'Pneus e Rodas' },
+        { key: 'interior', label: 'Interior' },
+        { key: 'motor_fluidos', label: 'Motor e Fluídos' },
+        { key: 'freios', label: 'Freios' },
+        { key: 'suspensao_direcao', label: 'Suspensão e Direção' },
+        { key: 'equipamentos', label: 'Equipamentos' },
+        { key: 'veiculo_ambulancia', label: 'Equipamentos - Ambulância' },
+        { key: 'imobilizacao', label: 'Equipamentos - Imobilização' },
         { key: 'oxigenacao', label: 'Oxigenação' },
         { key: 'biosseguranca', label: 'Biossegurança' }
       ];
