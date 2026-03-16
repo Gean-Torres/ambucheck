@@ -349,23 +349,38 @@ export default function App() {
 
   // Inicializar Auth
   useEffect(() => {
+    let isMounted = true;
+
     const resolveRedirectResult = async () => {
       try {
         await getRedirectResult(auth);
       } catch (err) {
         console.error('Erro no login por redirecionamento:', err);
-        setAuthError('Não foi possível concluir o login no retorno do Google. Tente novamente.');
+        if (isMounted) {
+          setAuthError('Não foi possível concluir o login no retorno do Google. Tente novamente.');
+        }
       }
     };
 
     resolveRedirectResult();
 
     const unsubscribe = onAuthStateChanged(auth, (u) => {
+      if (!isMounted) return;
       setUser(u);
       setLoading(false);
     });
 
-    return () => unsubscribe();
+    const loadingWatchdog = setTimeout(() => {
+      if (!isMounted) return;
+      setLoading(false);
+      setAuthError((prev) => prev || 'Não foi possível concluir a autenticação automaticamente. Tente entrar novamente.');
+    }, 10000);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(loadingWatchdog);
+      unsubscribe();
+    };
   }, []);
 
   // Buscar Histórico
@@ -386,14 +401,7 @@ export default function App() {
     const provider = new GoogleAuthProvider();
     setAuthError('');
 
-    const isMobileBrowser = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini|CriOS|FxiOS/i.test(navigator.userAgent);
-
     try {
-      if (isMobileBrowser) {
-        await signInWithRedirect(auth, provider);
-        return;
-      }
-
       await signInWithPopup(auth, provider);
     } catch (err) {
       const fallbackToRedirectCodes = new Set([
