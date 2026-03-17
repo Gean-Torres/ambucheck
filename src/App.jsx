@@ -34,7 +34,7 @@ import CheckItem from './components/form/CheckItem';
 import { initialFormStates } from './config/checklistInitialStates';
 import { fieldLabels } from './config/fieldLabels';
 import { commonFormSections, ambulanceExtraSections } from './config/formSections';
-import { buildHistoryCsv } from './utils/exportCsv';
+import { buildHistoryCsv, buildRecordCsv } from './utils/exportCsv';
 
 // --- Aplicação Principal ---
 export default function App() {
@@ -172,6 +172,16 @@ export default function App() {
     }));
   };
 
+  const downloadCsvFile = (csv, filename) => {
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleExport = () => {
     if (!exportStart || !exportEnd) return;
 
@@ -188,18 +198,23 @@ export default function App() {
       return;
     }
 
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `history_${exportStart}_${exportEnd}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsvFile(csv, `history_${exportStart}_${exportEnd}.csv`);
     setShowExportModal(false);
     setExportStart('');
     setExportEnd('');
     setVehicleTypeFilter('all'); // Reset filter after export
     setExportLayout('horizontal');
+  };
+
+  const handleExportEvent = (record, layout = 'horizontal') => {
+    const csv = buildRecordCsv(record, layout);
+    if (!csv) {
+      alert('Não há dados disponíveis para exportar.');
+      return;
+    }
+
+    const slug = record.id || record.dataString || Date.now();
+    downloadCsvFile(csv, `evento_${slug}.csv`);
   };
 
   const handleSubmit = async (e) => {
@@ -549,7 +564,7 @@ export default function App() {
               </div>
             ) : (
               history.map((item) => (
-                <HistoryCard key={item.id} data={item} />
+                <HistoryCard key={item.id} data={item} onExport={handleExportEvent} />
               ))
             )}
           </div>
@@ -603,8 +618,9 @@ export default function App() {
   );
 }
 
-function HistoryCard({ data }) {
+function HistoryCard({ data, onExport }) {
   const [expanded, setExpanded] = useState(false);
+  const [exportLayout, setExportLayout] = useState('horizontal');
 
   const getSections = () => {
     if (data.vehicleType === 'carro_pequeno') {
@@ -657,12 +673,31 @@ function HistoryCard({ data }) {
       </div>
       
       <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-        <button 
-          onClick={() => setExpanded(!expanded)}
-          className="text-xs font-bold text-red-600 flex items-center gap-1"
-        >
-          {expanded ? 'Ocultar detalhes' : 'Ver detalhes'}
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setExpanded(!expanded)}
+            className="text-xs font-bold text-red-600 flex items-center gap-1"
+          >
+            {expanded ? 'Ocultar detalhes' : 'Ver detalhes'}
+          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={exportLayout}
+              onChange={(e) => setExportLayout(e.target.value)}
+              className="text-[10px] font-semibold text-gray-600 border border-gray-200 rounded-lg px-2 py-1 bg-white"
+            >
+              <option value="horizontal">Horizontal</option>
+              <option value="vertical">Vertical</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => onExport?.(data, exportLayout)}
+              className="text-xs font-bold text-gray-600 border border-gray-200 rounded-xl px-3 py-1 transition hover:border-gray-300"
+            >
+              Exportar CSV
+            </button>
+          </div>
+        </div>
         <img src={data.assinatura} alt="Assinatura" className="h-8 opacity-60" />
       </div>
 

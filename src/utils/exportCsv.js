@@ -23,6 +23,45 @@ function formatVal(value) {
   return value;
 }
 
+function recordToRow(record) {
+  const clone = { ...record };
+  delete clone.assinatura;
+  delete clone.id;
+  delete clone.driverName; // evitar duplicidade: campo normalizado 'motorista' já contém o valor
+  return flattenObject(clone);
+}
+
+function deriveHeaders(rows) {
+  const all = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+  const ordered = all
+    .filter((h) => h !== 'motorista' && h !== 'loggedInUser')
+    .sort();
+  return ['motorista', 'loggedInUser', ...ordered];
+}
+
+function buildCsvFromRows(rows, layout, headers) {
+  const humanHeaders = headers.map((h) => fieldLabels[h] || h);
+  if (layout === 'vertical') {
+    return rows
+      .map((row, index) => {
+        const recordTitle = JSON.stringify(`Registro ${index + 1}`);
+        const recordRows = headers.map((h) => {
+          const label = JSON.stringify(fieldLabels[h] || h);
+          const value = JSON.stringify(formatVal(row[h] ?? ''));
+          return `${label},${value}`;
+        });
+        return [recordTitle, ...recordRows, ''].join('\n');
+      })
+      .join('\n');
+  }
+
+  const quotedHeaders = humanHeaders.map((h) => JSON.stringify(h));
+
+  return [quotedHeaders.join(',')]
+    .concat(rows.map((row) => headers.map((h) => JSON.stringify(formatVal(row[h] ?? ''))).join(',')))
+    .join('\n');
+}
+
 export function buildHistoryCsv({ history, exportStart, exportEnd, vehicleTypeFilter, exportLayout }) {
   const startDate = parseLocalDate(exportStart);
   startDate.setHours(0, 0, 0, 0);
@@ -43,37 +82,13 @@ export function buildHistoryCsv({ history, exportStart, exportEnd, vehicleTypeFi
     return null;
   }
 
-  const rows = filtered.map((record) => {
-    const clone = { ...record };
-    delete clone.assinatura;
-    delete clone.id;
-    return flattenObject(clone);
-  });
+  const rows = filtered.map(recordToRow);
+  const headers = deriveHeaders(rows);
+  return buildCsvFromRows(rows, exportLayout, headers);
+}
 
-  let headers = [...new Set(rows.flatMap((row) => Object.keys(row)))];
-  headers = headers.filter((h) => h !== 'motorista' && h !== 'loggedInUser');
-  headers.unshift('loggedInUser');
-  headers.unshift('motorista');
-
-  const humanHeaders = headers.map((h) => fieldLabels[h] || h);
-
-  const csv = exportLayout === 'vertical'
-    ? rows
-        .map((row, index) => {
-          const recordTitle = JSON.stringify(`Registro ${index + 1}`);
-          const recordRows = headers.map((h) => {
-            const label = JSON.stringify(fieldLabels[h] || h);
-            const value = JSON.stringify(formatVal(row[h] ?? ''));
-            return `${label},${value}`;
-          });
-          return [recordTitle, ...recordRows, ''].join('\n');
-        })
-        .join('\n')
-    : [humanHeaders.join(',')]
-        .concat(
-          rows.map((row) => headers.map((h) => JSON.stringify(formatVal(row[h] ?? ''))).join(','))
-        )
-        .join('\n');
-
-  return csv;
+export function buildRecordCsv(record, layout = 'horizontal') {
+  const rows = [recordToRow(record)];
+  const headers = deriveHeaders(rows);
+  return buildCsvFromRows(rows, layout, headers);
 }
