@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../../firebase';
 
 export function useOnlineStatus() {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -67,10 +69,6 @@ export function useOnlineStatus() {
     setSyncStatus('syncing');
 
     try {
-      // Import Firebase functions dynamically
-      const { collection, addDoc } = await import('firebase/firestore');
-      const { db } = await import('../../firebase');
-
       let failedSyncs = 0;
 
       for (const item of pending) {

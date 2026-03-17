@@ -13,10 +13,20 @@ Aplicação React + Firebase para checklist diário de ambulâncias, com autenti
 ```txt
 src/
   App.jsx
+  config/
+    checklistInitialStates.js
+    fieldLabels.js
+    formSections.js
   components/
+    form/
+      CheckItem.jsx
+      Section.jsx
+      SignaturePad.jsx
     modals/
       BaseModal.jsx
       ExportHistoryModal.jsx
+  utils/
+    exportCsv.js
 firebase.js
 ```
 
@@ -77,4 +87,5 @@ firebase deploy --only hosting
 ## Notas de manutenção
 - Componentes de interface reutilizáveis devem ficar em `src/components`.
 - Novos modais devem reutilizar `BaseModal` para manter consistência visual.
-- Regras de exportação e transformação de dados devem permanecer no `App.jsx` ou ser extraídas para utilitários caso cresçam.
+- Regras de exportação e transformação de dados ficam em `src/utils/exportCsv.js`.
+- Estados iniciais e metadados do formulário ficam em `src/config` para reduzir acoplamento no `App.jsx`.
